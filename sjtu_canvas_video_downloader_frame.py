@@ -34,6 +34,12 @@ class DownloaderFrame(tk.Frame):
         for i in range(1+entry_columnspan+button_columnspan):
             self.columnconfigure(i, weight=1)
 
+        for i in selected_courses:
+            for j in i:
+                j["videoPlayResponseVoList"].sort(
+                    key=lambda t: t["cdviViewNum"]
+                )
+
         self.selected_courses = selected_courses
 
         self.video_dirname_label = tk.Label(
@@ -104,19 +110,16 @@ class DownloaderFrame(tk.Frame):
                 course_name = remove_invalid_chars(course["courName"])
                 course_filename_raw = f"{subject_name}_{teacher_name}_{course_name}"
                 course_dirname = f"{subject_name}_{teacher_name}"
-                if partial_download:
-                    course_link = course["rtmpUrlHdv"]
-                    course_filename_ext = get_course_filename_ext(course_link)
-                    course_filename = f"{course_dirname}/{course_filename_raw}{course_filename_ext}"
-                    course_links.append(course_link)
-                    course_filenames.append(course_filename)
-                else:
-                    for i, video in enumerate(course["videoPlayResponseVoList"]):
+                for i, video in enumerate(course["videoPlayResponseVoList"]):
+                    if (not partial_download) or (partial_download and video["cdviViewNum"] == 0):
                         course_link = video["rtmpUrlHdv"]
                         course_filename_ext = get_course_filename_ext(
                             course_link
                         )
-                        course_filename = f"{course_dirname}/{course_filename_raw}_{i}{course_filename_ext}"
+                        if partial_download:
+                            course_filename = f"{course_dirname}/{course_filename_raw}{course_filename_ext}"
+                        else:
+                            course_filename = f"{course_dirname}/{course_filename_raw}_{i}{course_filename_ext}"
                         course_links.append(course_link)
                         course_filenames.append(course_filename)
         return course_links, course_filenames
